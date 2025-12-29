@@ -1,67 +1,65 @@
 <script>
-(function(){
-const _0x3a9e=["execCommand","false","getElementById","linkBox","style","display","block","trim","value","URL","insertHTML","target","_blank","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","length","floor","random","innerHTML","Note trống","alert","note_","pushState","origin","pathname","replace","/[^\\/]*$/","/","split","pop","getItem","textContent","keydown","preventDefault","keyCode","ctrlKey","toLowerCase","contextmenu"];
-const _0x=(i)=>_0x3a9e[i];
+(()=>{
 
-window.cmd=function(c){
-document[_0x(0)](c,false,null);
+const $=e=>document.querySelector(e);
+
+window.cmd=e=>document.execCommand(e,false,null);
+
+window.showLink=()=>$("#linkBox").style.display="block";
+
+window.insertLink=()=>{
+  let t=linkText.value.trim();
+  let u=linkUrl.value.trim();
+  try{new URL(u)}catch{return alert("Link không hợp lệ")}
+  document.execCommand("insertHTML",false,
+    `<a href="${u}" target="_blank">${t||u}</a>`
+  );
+  linkBox.style.display="none";
 };
 
-window.showLink=function(){
-document[_0x(2)](_0x(3))[_0x(4)][_0x(5)]=_0x(6);
+const genID=()=>{
+  const c="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let r="";
+  for(let i=0;i<10;i++) r+=c[Math.floor(Math.random()*c.length)];
+  return r;
 };
 
-window.insertLink=function(){
-let t=linkText[_0x(8)][_0x(7)]();
-let u=linkUrl[_0x(8)][_0x(7)]();
-try{new window[_0x(9)](u)}catch{alert("Link không hợp lệ");return;}
-document[_0x(0)](_0x(10),false,
-`<a href="${u}" ${_0x(11)}="${_0x(12)}">${t||u}</a>`);
-linkBox[_0x(4)][_0x(5)]="none";
+window.saveNote=()=>{
+  let c=editor.innerHTML.trim();
+  if(!c) return alert("Note trống");
+  let id=genID();
+  localStorage.setItem("note_"+id,btoa(unescape(encodeURIComponent(c))));
+  history.pushState({}, "", id);
+  showLinkOut(id);
 };
 
-function genID(){
-let c=_0x(13),r="";
-for(let i=0;i<10;i++)r+=c[Math[_0x(15)](Math[_0x(16)]()*c[_0x(14)])];
-return r;
-}
-
-window.saveNote=function(){
-let c=editor[_0x(17)][_0x(7)]();
-if(!c){alert(_0x(18));return;}
-let id=genID();
-localStorage.setItem(_0x(20)+id,c);
-history[_0x(21)]({}, "", id);
-showLinkOut(id);
+window.showLinkOut=id=>{
+  let u=location.origin+location.pathname.replace(/\/[^\/]*$/,"/")+id;
+  output.style.display="block";
+  output.innerHTML=`Link chia sẻ:<br><a href="${u}">${u}</a>`;
 };
 
-window.showLinkOut=function(id){
-let u=location[_0x(22)]+location[_0x(23)][_0x(24)](new RegExp(_0x(25)),"/")+id;
-output[_0x(4)][_0x(5)]=_0x(6);
-output[_0x(17)]=`Link chia sẻ:<br><a href="${u}">${u}</a>`;
+window.loadNote=()=>{
+  let id=location.pathname.split("/").pop();
+  let n=localStorage.getItem("note_"+id);
+  if(n){
+    editor.innerHTML=decodeURIComponent(escape(atob(n)));
+    showLinkOut(id);
+  }
 };
 
-window.loadNote=function(){
-let id=location[_0x(23)][_0x(27)]("/")[_0x(28)]();
-let n=localStorage[_0x(29)](_0x(20)+id);
-if(n){
-editor[_0x(17)]=n;
-showLinkOut(id);
-}
+window.showRaw=()=>{
+  output.style.display="block";
+  output.textContent=editor.innerHTML;
 };
 
-window.showRaw=function(){
-output[_0x(4)][_0x(5)]=_0x(6);
-output[_0x(30)]=editor[_0x(17)];
-};
-
-document.addEventListener(_0x(33),e=>e.preventDefault());
-document.addEventListener(_0x(31),e=>{
-if(e[_0x(35)]==123||(e[_0x(36)]&&["u","s","i"][_0x(27)]().includes(e.key[_0x(37)]()))){
-e[_0x(34)]();
-}
+document.addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("keydown",e=>{
+  if(e.key==="F12" || (e.ctrlKey && ["u","s","i"].includes(e.key.toLowerCase())))
+    e.preventDefault();
 });
 
 loadNote();
+
 })();
 </script>
