@@ -1,65 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>TPrintNotes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+    margin:0;
+    font-family: system-ui, sans-serif;
+    background:#f5f6fa;
+    color:#333;
+}
+header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 16px;
+    background:#fff;
+    border-bottom:1px solid #ddd;
+}
+header img{
+    height:32px;
+}
+header h1{
+    font-size:18px;
+    margin:0;
+}
+
+.container{
+    max-width:900px;
+    margin:20px auto;
+    padding:0 12px;
+}
+
+.toolbar{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+}
+.toolbar button{
+    padding:6px 10px;
+    border:1px solid #ccc;
+    background:#fff;
+    cursor:pointer;
+    border-radius:4px;
+}
+.toolbar button:hover{
+    background:#eee;
+}
+
+#editor{
+    min-height:260px;
+    background:#fff;
+    border:1px solid #ccc;
+    border-radius:6px;
+    padding:10px;
+    outline:none;
+}
+
+.actions{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+.actions button{
+    padding:8px 14px;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    background:#4f6bed;
+    color:#fff;
+}
+.actions button.secondary{
+    background:#666;
+}
+
+#linkBox{
+    margin-top:10px;
+    display:none;
+}
+#linkBox input{
+    width:100%;
+    padding:8px;
+    margin-bottom:6px;
+    border:1px solid #ccc;
+    border-radius:4px;
+}
+
+.output{
+    margin-top:15px;
+    background:#fff;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    display:none;
+    word-break:break-all;
+}
+a{color:#4f6bed;}
+</style>
+</head>
+<body>
+
+<header>
+    <img src="https://i.imgur.com/YOURLOGO.png">
+    <h1>TPrintNotes</h1>
+</header>
+
+<div class="container">
+
+<div class="toolbar">
+    <button onclick="cmd('bold')"><b>B</b></button>
+    <button onclick="cmd('italic')"><i>I</i></button>
+    <button onclick="cmd('underline')"><u>U</u></button>
+    <button onclick="showLink()">Link</button>
+</div>
+
+<div id="editor" contenteditable="true">
+Viết nội dung note ở đây...
+</div>
+
+<div id="linkBox">
+    <input id="linkText" placeholder="Chữ hiển thị">
+    <input id="linkUrl" placeholder="https://example.com">
+    <button onclick="insertLink()">Chèn link</button>
+</div>
+
+<div class="actions">
+    <button onclick="saveNote()">Lưu & Chia sẻ</button>
+    <button class="secondary" onclick="showRaw()">Raw</button>
+</div>
+
+<div class="output" id="output"></div>
+
+</div>
+
 <script>
-(()=>{
+function cmd(c){
+    document.execCommand(c,false,null);
+}
 
-const $=e=>document.querySelector(e);
+function showLink(){
+    document.getElementById("linkBox").style.display="block";
+}
 
-window.cmd=e=>document.execCommand(e,false,null);
+function insertLink(){
+    let text = linkText.value.trim();
+    let url = linkUrl.value.trim();
+    try{
+        new URL(url);
+    }catch{
+        alert("Link không hợp lệ");
+        return;
+    }
+    document.execCommand("insertHTML",false,
+        `<a href="${url}" target="_blank">${text||url}</a>`
+    );
+    linkBox.style.display="none";
+}
 
-window.showLink=()=>$("#linkBox").style.display="block";
+function genID(){
+    const c="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let r="";
+    for(let i=0;i<10;i++) r+=c[Math.floor(Math.random()*c.length)];
+    return r;
+}
 
-window.insertLink=()=>{
-  let t=linkText.value.trim();
-  let u=linkUrl.value.trim();
-  try{new URL(u)}catch{return alert("Link không hợp lệ")}
-  document.execCommand("insertHTML",false,
-    `<a href="${u}" target="_blank">${t||u}</a>`
-  );
-  linkBox.style.display="none";
-};
-
-const genID=()=>{
-  const c="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let r="";
-  for(let i=0;i<10;i++) r+=c[Math.floor(Math.random()*c.length)];
-  return r;
-};
-
-window.saveNote=()=>{
-  let c=editor.innerHTML.trim();
-  if(!c) return alert("Note trống");
-  let id=genID();
-  localStorage.setItem("note_"+id,btoa(unescape(encodeURIComponent(c))));
-  history.pushState({}, "", id);
-  showLinkOut(id);
-};
-
-window.showLinkOut=id=>{
-  let u=location.origin+location.pathname.replace(/\/[^\/]*$/,"/")+id;
-  output.style.display="block";
-  output.innerHTML=`Link chia sẻ:<br><a href="${u}">${u}</a>`;
-};
-
-window.loadNote=()=>{
-  let id=location.pathname.split("/").pop();
-  let n=localStorage.getItem("note_"+id);
-  if(n){
-    editor.innerHTML=decodeURIComponent(escape(atob(n)));
+function saveNote(){
+    let content=editor.innerHTML.trim();
+    if(!content){
+        alert("Note trống");
+        return;
+    }
+    let id=genID();
+    localStorage.setItem("note_"+id,content);
+    history.pushState({}, "", id);
     showLinkOut(id);
-  }
-};
+}
 
-window.showRaw=()=>{
-  output.style.display="block";
-  output.textContent=editor.innerHTML;
-};
+function showLinkOut(id){
+    let url=location.origin+location.pathname.replace(/\/[^\/]*$/,"/")+id;
+    output.style.display="block";
+    output.innerHTML=`Link chia sẻ:<br><a href="${url}">${url}</a>`;
+}
 
-document.addEventListener("contextmenu",e=>e.preventDefault());
-document.addEventListener("keydown",e=>{
-  if(e.key==="F12" || (e.ctrlKey && ["u","s","i"].includes(e.key.toLowerCase())))
-    e.preventDefault();
-});
+function loadNote(){
+    let id=location.pathname.split("/").pop();
+    let note=localStorage.getItem("note_"+id);
+    if(note){
+        editor.innerHTML=note;
+        showLinkOut(id);
+    }
+}
+
+function showRaw(){
+    output.style.display="block";
+    output.textContent=editor.innerHTML;
+}
 
 loadNote();
-
-})();
 </script>
+
+</body>
+</html>
